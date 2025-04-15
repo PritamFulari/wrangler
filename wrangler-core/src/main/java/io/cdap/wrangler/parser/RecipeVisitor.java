@@ -326,4 +326,26 @@ public final class RecipeVisitor extends DirectivesBaseVisitor<RecipeSymbol.Buil
     int column = ctx.getStart().getCharPositionInLine();
     return new SourceInfo(lineno, column, text);
   }
+
+
+  public RecipeSymbol.Builder visitValue(DirectivesParser.ValueContext ctx) {
+    if (ctx.String() != null) {
+      String value = ctx.String().getText();
+      builder.addToken(new Text(value.substring(1, value.length() - 1)));
+    } else if (ctx.Number() != null) {
+      builder.addToken(new Numeric(new LazyNumber(ctx.Number().getText())));
+    } else if (ctx.Bool() != null) {
+      builder.addToken(new Bool(Boolean.parseBoolean(ctx.Bool().getText())));
+    } else if (ctx.BYTE_SIZE() != null) {
+      builder.addToken(new io.cdap.wrangler.api.parser.ByteSize(ctx.BYTE_SIZE().getText()));
+    } else if (ctx.TIME_DURATION() != null) {
+      builder.addToken(new io.cdap.wrangler.api.parser.TimeDuration(ctx.TIME_DURATION().getText()));
+    } else if (ctx.Identifier() != null) {
+      builder.addToken(new Identifier(ctx.Identifier().getText()));
+    } else {
+      throw new IllegalArgumentException("Unsupported value: " + ctx.getText());
+    }
+    return builder;
+  }
+
 }

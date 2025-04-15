@@ -115,6 +115,8 @@ identifier
  : Identifier
  ;
 
+
+
 properties
  : 'prop' ':' OBrace (propertyList)+  CBrace
  | 'prop' ':' OBrace OBrace (propertyList)+ CBrace { notifyErrorListeners("Too many start paranthesis"); }
@@ -140,7 +142,7 @@ numberRange
  ;
 
 value
- : String | Number | Column | Bool | BYTE_SIZE |  TIME_DURATION
+ : String | Number | Column | Bool | BYTE_SIZE |  TIME_DURATION | Identifier
  ;
 
 ecommand
