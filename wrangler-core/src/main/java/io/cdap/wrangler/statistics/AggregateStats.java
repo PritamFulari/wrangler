@@ -1,4 +1,3 @@
-
 /*
  * Copyright © 2015-2025 Cask Data, Inc.
  *
@@ -15,24 +14,25 @@
  * limitations under the License.
  */
 
-
 package io.cdap.wrangler.statistics;
-
 import io.cdap.wrangler.api.Arguments;
 import io.cdap.wrangler.api.Directive;
 import io.cdap.wrangler.api.DirectiveExecutionException;
 import io.cdap.wrangler.api.DirectiveParseException;
 import io.cdap.wrangler.api.ExecutorContext;
 import io.cdap.wrangler.api.Row;
+import io.cdap.wrangler.api.parser.ByteSize;
 import io.cdap.wrangler.api.parser.Identifier;
 import io.cdap.wrangler.api.parser.Text;
-import io.cdap.wrangler.api.parser.TokenType;
-import io.cdap.wrangler.api.parser.ByteSize;
 import io.cdap.wrangler.api.parser.TimeDuration;
+import io.cdap.wrangler.api.parser.TokenType;
 import io.cdap.wrangler.api.parser.UsageDefinition;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 
 /**
  * Aggregates byte size and time duration values across rows
@@ -52,6 +52,36 @@ public class AggregateStats implements Directive {
     private long totalNanos = 0;
     private int rowCount = 0;
 
+    // Valid units for size and time
+    private static final Set<String> VALID_SIZE_UNITS = new HashSet<String>() {{
+        add("b");
+        add("kb");
+        add("mb");
+        add("gb");
+        add("tb");
+        add("bytes");
+    }};
+
+    private static final Set<String> VALID_TIME_UNITS = new HashSet<String>() {{
+        add("ns");
+        add("us");
+        add("ms");
+        add("s");
+        add("m");
+        add("h");
+        add("nanos");
+        add("micros");
+        add("millis");
+        add("seconds");
+        add("minutes");
+        add("hours");
+    }};
+
+    private static final Set<String> VALID_AGG_TYPES = new HashSet<String>() {{
+        add("total");
+        add("average");
+    }};
+
     @Override
     public UsageDefinition define() {
         // Assuming you need to pass a string to initialize the builder
@@ -70,7 +100,6 @@ public class AggregateStats implements Directive {
         return builder.build();
     }
 
-
     @Override
     public void initialize(Arguments arguments) throws DirectiveParseException {
         sizeColumn = ((Identifier) arguments.value("size-column")).value();
@@ -87,8 +116,18 @@ public class AggregateStats implements Directive {
         if (arguments.value("aggregation-type") != null) {
             aggType = ((Text) arguments.value("aggregation-type")).value().toLowerCase();
         }
-    }
 
+        // Validate the size and time units
+        if (!VALID_SIZE_UNITS.contains(sizeUnit)) {
+            throw new DirectiveParseException("Invalid size unit: " + sizeUnit);
+        }
+        if (!VALID_TIME_UNITS.contains(timeUnit)) {
+            throw new DirectiveParseException("Invalid time unit: " + timeUnit);
+        }
+        if (!VALID_AGG_TYPES.contains(aggType)) {
+            throw new DirectiveParseException("Invalid aggregation type: " + aggType);
+        }
+    }
 
     @Override
     public List<Row> execute(List<Row> rows, ExecutorContext context) throws DirectiveExecutionException {

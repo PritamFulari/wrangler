@@ -215,4 +215,14 @@ public class RecipeCompilerTest {
     Set<String> loadableDirectives = compile.getSymbols().getLoadableDirectives();
     Assert.assertEquals(4, loadableDirectives.size());
   }
+
+  @Test
+  public void testAggregateStatsParsing() throws Exception {
+    String[] recipe = new String[] {
+            "aggregate-stats :data_transfer_size :response_time :total_size_mb :total_time_sec 'mb' 's' 'total'"
+    };
+    // Should not throw parse exception
+    TestingRig.parse(recipe);
+  }
+
 }
